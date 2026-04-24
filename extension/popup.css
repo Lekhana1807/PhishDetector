@@ -1,0 +1,47 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: white;
+  width: 300px;
+  padding: 15px;
+}
+
+.container {
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 10px;
+}
+
+button {
+  background: #2563eb;
+  border: none;
+  padding: 10px;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+#resultBox {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.safe {
+  background: #16a34a;
+}
+
+.danger {
+  background: #dc2626;
+}
+
+.hidden {
+  display: none;
+}
