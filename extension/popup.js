@@ -1,114 +1,88 @@
+const ANALYZE_URL = "http://127.0.0.1:5000/analyze-url";
+const AUTO_SCAN_KEY = "autoScanEnabled";
 
-document.addEventListener("DOMContentLoaded", function () {
+const DEFAULT_SIGNALS = {
+  hasPassword: false,
+  hasEmailForm: false,
+  hasIframe: false,
+  hasPopupWindow: false,
+  hasOnMouseOver: false,
+  disablesRightClick: false,
+  redirectCount: 0
+};
 
-    const btn = document.getElementById("scanBtn");
-    const resultBox = document.getElementById("result");
-
-    btn.addEventListener("click", async () => {
-
-        resultBox.innerText = "Scanning...";
-
-        let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-        let url = tab?.url;
-
-        if (!url) {
-            resultBox.innerText = "Invalid URL";
-            return;
-        }
-
-        fetch("http://127.0.0.1:5000/analyze", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ url: url })
-        })
-        .then(res => res.json())
-        .then(data => {
-
-            resultBox.innerText =
-                data.result + " (Score: " + data.score + ")";
-
-            resultBox.style.color =
-                data.score > 50 ? "red" : "green";
-
-        })
-        .catch(() => {
-            resultBox.innerText = "Backend not connected";
-        });
-
-    });
-
-
-document.getElementById("scanBtn").addEventListener("click", async () => {
-
-  let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  let url = tab.url;
-
-  document.getElementById("url").innerText = url;
-
-  // 🔗 Ask content.js if login form exists
-  let response = await chrome.tabs.sendMessage(tab.id, { action: "checkLoginForm" });
-  let hasPasswordField = response?.hasPassword;
-
-  let riskScore = 0;
-  let reasons = [];
-
-  // 🔍 URL Checks
-  if (url.includes("@")) {
-    riskScore += 30;
-    reasons.push("Contains '@'");
+async function getPageSignals(tabId) {
+  try {
+    return await chrome.tabs.sendMessage(tabId, { action: "collectSignals" });
+  } catch (_error) {
+    // Inject script in case content script was not ready yet.
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ["content.js"]
+      });
+      return await chrome.tabs.sendMessage(tabId, { action: "collectSignals" });
+    } catch (_secondError) {
+      return DEFAULT_SIGNALS;
+    }
   }
+}
 
-  if (url.length > 75) {
-    riskScore += 15;
-    reasons.push("Very long URL");
-  }
+document.addEventListener("DOMContentLoaded", () => {
+  const scanBtn = document.getElementById("scanBtn");
+  const urlEl = document.getElementById("url");
+  const autoScanToggle = document.getElementById("autoScanToggle");
+  const resultBox = document.getElementById("resultBox");
+  const statusEl = document.getElementById("status");
+  const detailsEl = document.getElementById("details");
 
-  if (url.includes("bit.ly") || url.includes("tinyurl")) {
-    riskScore += 25;
-    reasons.push("Shortened URL");
-  }
+  chrome.storage.local.get([AUTO_SCAN_KEY], (items) => {
+    const enabled = items[AUTO_SCAN_KEY];
+    autoScanToggle.checked = enabled !== false;
+  });
 
-  if (url.includes("login") || url.includes("verify") || url.includes("bank")) {
-    riskScore += 20;
-    reasons.push("Suspicious keywords");
-  }
+  autoScanToggle.addEventListener("change", () => {
+    chrome.storage.local.set({ [AUTO_SCAN_KEY]: autoScanToggle.checked });
+  });
 
-  if (!url.startsWith("https")) {
-    riskScore += 10;
-    reasons.push("Not HTTPS");
-  }
+  scanBtn.addEventListener("click", async () => {
+    resultBox.className = "";
+    resultBox.classList.remove("hidden");
+    statusEl.textContent = "Scanning...";
+    detailsEl.textContent = "Collecting features...";
 
-  // 🔐 Login Form Detection
-  if (hasPasswordField) {
-    riskScore += 25;
-    reasons.push("Login form detected");
-  }
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || !tab.url || !/^https?:\/\//i.test(tab.url)) {
+      statusEl.textContent = "Cannot scan this page";
+      detailsEl.textContent = "Open a normal website tab (http/https) and try again.";
+      resultBox.classList.add("danger");
+      return;
+    }
 
-  // 🎯 UI Elements
-  let resultBox = document.getElementById("resultBox");
-  let status = document.getElementById("status");
-  let details = document.getElementById("details");
+    urlEl.textContent = tab.url;
+    const pageSignals = await getPageSignals(tab.id);
 
-  resultBox.classList.remove("hidden");
+    try {
+      const response = await fetch(ANALYZE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: tab.url, pageSignals })
+      });
 
-  // 🧠 Decision Logic
-  if (riskScore >= 60) {
-    resultBox.className = "danger";
-    status.innerText = "Phishing Detected";
-  } else if (riskScore >= 30) {
-    resultBox.className = "danger";
-    status.innerText = "Suspicious Website";
-  } else {
-    resultBox.className = "safe";
-    status.innerText = "Safe Website";
-  }
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Backend request failed");
+      }
 
-  details.innerHTML = `
-    Risk Score: ${riskScore}/100 <br>
-    Password Field: ${hasPasswordField ? "Yes" : "No"} <br>
-    ${reasons.length ? "<br>Reasons:<br>- " + reasons.join("<br>- ") : ""}
-  `;
+      const score = Number(data.score || 0);
+      const level = score >= 60 ? "danger" : score >= 35 ? "suspicious" : "safe";
+      resultBox.classList.add(level);
+      statusEl.textContent = data.result || "Scan complete";
+      detailsEl.textContent = `Risk Score: ${score}/100 | Features used: ${data.used_feature_count}`;
+    } catch (error) {
+      resultBox.classList.add("danger");
+      statusEl.textContent = "Scan failed";
+      detailsEl.textContent = `Backend error: ${error.message}`;
+    }
+  });
 });

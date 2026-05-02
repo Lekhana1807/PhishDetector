@@ -1,34 +1,21 @@
 {
   "manifest_version": 3,
-
-  "name": "PhishGuard AI",
+  "name": "PhishDetector",
   "version": "1.0",
-  "description": "AI-based phishing detection extension",
-  "permissions": ["tabs", "activeTab", "scripting"],
+  "description": "Detect malicious websites using a trained phishing model",
+  "permissions": ["tabs", "activeTab", "scripting", "storage"],
   "host_permissions": ["<all_urls>", "http://127.0.0.1:5000/*"],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "PhishGuard AI"
+    "default_title": "PhishDetector"
   },
   "background": {
     "service_worker": "background.js"
-  }
-
-  "name": "PhishDetector",
-  "version": "1.0",
-  "description": "Phishing detection extension",
-  "permissions": ["activeTab", "scripting"],
-  "host_permissions": ["<all_urls>"],
-
-  "action": {
-    "default_popup": "popup.html"
   },
-
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"]
     }
   ]
-
 }

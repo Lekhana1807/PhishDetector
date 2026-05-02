@@ -1,39 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-    <title>PhishGuard AI</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-    <h2>🛡️ PhishGuard AI</h2>
-
-    <button id="scanBtn">Scan This Site</button>
-
-    <div id="result">Click scan to analyze</div>
-
-    <script src="popup.js"></script>
-
+  <meta charset="UTF-8">
   <title>PhishDetector</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-
   <div class="container">
-    <h2> &#128737 PhishDetector</h2>
+    <h2>&#128737; PhishDetector</h2>
+    <p id="url">Click scan to analyze current page.</p>
+    <label class="toggleRow" for="autoScanToggle">
+      <span>Auto Scan</span>
+      <input id="autoScanToggle" type="checkbox" checked>
+    </label>
 
-    <p id="url">Scanning current website...</p>
-
-    <button id="scanBtn">Scan Now</button>
+    <button id="scanBtn">Scan Current Site</button>
 
     <div id="resultBox" class="hidden">
       <h3 id="status"></h3>
-      <p id="details"></p>
+      <p id="details">Risk score: -</p>
     </div>
   </div>
 
   <script src="popup.js"></script>
-
 </body>
 </html>

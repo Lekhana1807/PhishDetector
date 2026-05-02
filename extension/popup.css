@@ -14,6 +14,22 @@ h2 {
   margin-bottom: 10px;
 }
 
+.toggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0 14px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #1e293b;
+}
+
+.toggleRow input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+}
+
 button {
   background: #2563eb;
   border: none;
@@ -40,6 +56,10 @@ button:hover {
 
 .danger {
   background: #dc2626;
+}
+
+.suspicious {
+  background: #b45309;
 }
 
 .hidden {
