@@ -1,15 +1,17 @@
-# PhishDetector AI 🔐
+# PhishDetector AI
 
-## 🧠 Problem Statement
-Detect malicious/phishing URLs and protect users in real time.
+PhishNet is a phishing URL detection system that identifies suspicious and malicious websites using URL analysis and cybersecurity techniques. It checks security features such as HTTPS usage, suspicious keywords, and domain patterns to help users detect potential online threats safely.
 
-## 🚀 Features
+## Problem Statement
+Detect malicious and phishing URLs to protect users in real time.
+
+## Features
 - URL phishing detection
-- Risk score (Safe / Suspicious / High Risk)
-- Browser extension / web interface
-- AI-based classification (if used)
+- Risk score output (Safe / Suspicious / High Risk)
+- Browser extension or web interface integration
+- AI-based classification
 
-## 🛠️ Tech Stack
-- Frontend: HTML, CSS, JS
+## Tech Stack
+- Frontend: HTML, CSS, JavaScript
 - Backend: Flask
 - ML: Scikit-learn
